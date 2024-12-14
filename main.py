@@ -44,6 +44,10 @@ def telegram_webhook():
         return '', 200
     return '', 403
 
+@app.route('/', methods=['GET'])
+def bot_status():
+    return "BOT IS RUNNING", 200
+
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
     bot.reply_to(message, "Hi! Send me an image with a caption, and I'll post it on Instagram.")
