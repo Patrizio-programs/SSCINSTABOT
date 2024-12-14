@@ -3,8 +3,8 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from instagrapi import Client
-from telebot import TeleBot
-from telebot.types import Message
+from telebot import TeleBot, types
+from flask import Flask, request
 import requests
 
 # Instagram login details
@@ -32,12 +32,24 @@ def instagram_upload(photo_path, caption):
 bot_token = os.getenv('TELEGRAM_TOKEN')
 bot = TeleBot(bot_token)
 
+# Flask app for handling webhook
+app = Flask(__name__)
+
+@app.route('/webhook', methods=['POST'])
+def telegram_webhook():
+    if request.headers.get('content-type') == 'application/json':
+        json_data = request.get_json()
+        update = types.Update.de_json(json_data)  # Parse the Telegram update
+        bot.process_new_updates([update])
+        return '', 200
+    return '', 403
+
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
     bot.reply_to(message, "Hi! Send me an image with a caption, and I'll post it on Instagram.")
 
 @bot.message_handler(content_types=['photo'])
-def handle_image(message: Message):
+def handle_image(message: types.Message):
     try:
         # Get the photo and save it locally
         file_info = bot.get_file(message.photo[-1].file_id)
@@ -59,6 +71,13 @@ def handle_image(message: Message):
         bot.reply_to(message, f"Failed to post photo: {e}")
 
 if __name__ == "__main__":
+    # Login to Instagram
     instagram_login()
-    bot.polling()
+    
+    # Set webhook URL for Telegram bot
+    webhook_url = "https://sscinstabot.onrender.com/webhook"
+    bot.remove_webhook()  # Remove existing webhook, if any
+    bot.set_webhook(url=webhook_url)
 
+    # Run Flask app
+    app.run(host="0.0.0.0", port=int(os.getenv("PORT", 5000)))
