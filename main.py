@@ -1,12 +1,15 @@
 import os
+from dotenv import load_dotenv
+load_dotenv()
+
 from instagrapi import Client
 from telebot import TeleBot
 from telebot.types import Message
 import requests
 
 # Instagram login details
-INSTAGRAM_USERNAME = 'simplyspanish@pgmja.com'
-INSTAGRAM_PASSWORD = 'elpadrino111'
+INSTAGRAM_USERNAME = os.getenv('INSTA_USER')
+INSTAGRAM_PASSWORD = os.getenv('INSTA_PASS')
 
 # Initialize Instagram Client
 ig_client = Client()
@@ -26,7 +29,7 @@ def instagram_upload(photo_path, caption):
         print(f"Failed to upload photo to Instagram: {e}")
 
 # Initialize Telegram bot
-bot_token = "7077730350:AAHKVELxGFnvHMPp_zT7s_kIPcTqQ7Xru5I"
+bot_token = os.getenv('TELEGRAM_TOKEN')
 bot = TeleBot(bot_token)
 
 @bot.message_handler(commands=['start'])
@@ -58,3 +61,4 @@ def handle_image(message: Message):
 if __name__ == "__main__":
     instagram_login()
     bot.polling()
+
